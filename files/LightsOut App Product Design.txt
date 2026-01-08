@@ -1,0 +1,158 @@
+# LightsOut App: Product Design Document
+
+**Version:** 1.0  
+**Date:** January 07, 2026  
+**Authors:** Conceptualized in collaboration with xAI Grok  
+**Status:** Draft  
+
+## Executive Summary
+
+LightsOut is a innovative mobile application designed to enhance productivity, focus, and sleep quality by enforcing structured "lock-in" periods where users commit to distraction-free modes. The app simulates a "lights out" state on the device, dimming screens, blocking notifications, and restricting access to non-essential features. Key differentiators include a 20% override rule to build discipline, customizable modes for work/study (Focus Mode) and bedtime (Sleep Mode), and deep integrations with device hardware and software layers for an immersive experience. Targeted at users seeking digital wellness, the app combines empathy-driven nudges with robust enforcement to foster sustainable habits.
+
+Built for iOS and Android, LightsOut adopts a freemium model with premium features unlocking advanced analytics and customizations. This document outlines the app's concept, features, user experience, technical implementation, monetization strategy, challenges, and development roadmap.
+
+## 1. Introduction and Core Concept
+
+### 1.1 App Overview
+LightsOut empowers users to "lock in" during work or study sessions and "lights out" for restful sleep by temporarily transforming their phone into a minimalistic, distraction-free device. The app addresses common pain points like endless scrolling, notification overload, and poor sleep hygiene, promoting mental health and efficiency.
+
+- **Primary Goals**:
+  - Boost productivity through enforced focus periods.
+  - Improve sleep by automating wind-down routines and device restrictions.
+  - Build long-term habits via gentle friction (e.g., timed overrides) and data-driven insights.
+
+- **Target Audience**:
+  - Professionals and students (focus modes).
+  - Individuals with sleep issues (e.g., insomniacs, shift workers).
+  - Wellness enthusiasts integrating with smart homes or wearables.
+
+- **Unique Selling Points (USPs)**:
+  - **20% Override Rule**: Users must complete at least 20% of a session before accessing custom override commands, reducing impulse quits.
+  - **Holistic Integration**: Combines screen dimming, sensor disabling, and network isolation for a "true blackout" feel.
+  - **Cross-Mode Versatility**: Seamless switch between focus and sleep, with AI-suggested schedules based on user data.
+
+### 1.2 Inspiration and Market Fit
+Drawing from apps like Forest (gamified focus) and Calm (sleep aids), LightsOut stands out by merging both into one tool with stricter enforcement. Market research indicates a growing demand for digital detox apps, with the global wellness app market projected to reach $15 billion by 2028. Competitors like Focus@Will or Screen Time lack the hardware-level immersion and override safeguards.
+
+## 2. Key Features
+
+### 2.1 Modes of Operation
+- **Focus Mode (Lock-In)**:
+  - Timer-based sessions (e.g., 25-90 minutes, customizable presets inspired by Pomodoro).
+  - Actions: Dim screen to grayscale/low brightness; block non-whitelisted apps; silence notifications (except emergencies); play ambient sounds or display motivational overlays.
+  - Enhancements: Integration with task managers (e.g., Todoist) to link sessions to specific goals.
+
+- **Sleep Mode (Nighttime LightsOut)**:
+  - Scheduled activation (e.g., 10 PM to 6 AM, recurring).
+  - Actions: Full screen blackout; enable Do Not Disturb; gradual wind-down (dim lights, play lullabies 15-30 minutes prior); track sleep via device sensors or wearables.
+  - Post-session: Morning reports on sleep duration and quality, with tips for improvement.
+
+### 2.2 Timer and Scheduling
+- **Setup Options**: Quick timers, custom durations, recurring schedules (daily/weekly).
+- **20% Rule Enforcement**: Overrides locked until 20% elapsed (e.g., 12 minutes into a 1-hour session). Post-20%, nudges like "Confirm exit? Progress so far: 25%" appear.
+- **Emergency Handling**: Instant exits via hardware triggers (e.g., double power button press), logged for habit analysis.
+
+### 2.3 Customization and Overrides
+- **Custom Commands**: Voice/gesture-based (e.g., "LightsOut pause" via Siri/Google Assistant), but time-locked.
+- **Whitelists/Blacklists**: User-defined app access (e.g., allow Spotify for focus, block all social media).
+- **Profiles**: Pre-built themes like "Strict Work" (no overrides) or "Relaxed Sleep" (gradual enforcement).
+
+### 2.4 Integrations
+- **Device Sync**: Cross-platform (iOS/Android) with desktop web extension for browser blocking.
+- **Smart Home**: Link to Philips Hue or Google Home to dim physical lights.
+- **Health Ecosystems**: Sync with Apple Health/Google Fit for circadian-based suggestions; wearables for accurate sleep tracking.
+- **Social Features**: Optional accountability sharing (e.g., auto-messages to contacts: "In LightsOut until 2 PM").
+
+### 2.5 Analytics and Insights
+- Track streaks, override frequency, and session completion rates.
+- AI-driven recommendations (e.g., "Shorten focus sessions to reduce overrides").
+- Premium: Detailed graphs on sleep/focus trends.
+
+## 3. User Experience (UX/UI)
+
+### 3.1 Onboarding and Interface
+- **Onboarding Flow**: Goal-setting quiz (e.g., "Focus or sleep?"), permission requests with explanations, guided first session.
+- **Design Principles**: Minimalist, dark-mode default with calming palettes (blues, grays). Intuitive navigation via bottom tabs: Home, Schedules, Profiles, Insights.
+- **Home Screen**: Displays upcoming sessions, current streaks, and quick-start buttons.
+
+### 3.2 During Sessions
+- **Visuals**: Serene lock screens (e.g., starry night for sleep, zen motifs for focus) with countdown timers and breathing widgets.
+- **Interactivity**: Minimal—taps reveal progress but no full unlocks until 20% threshold.
+
+### 3.3 Post-Session
+- **Feedback Loop**: Quick surveys for refinement; celebratory badges for completions.
+- **Accessibility**: VoiceOver support, high-contrast modes, customizable font sizes.
+
+## 4. Technical Architecture
+
+### 4.1 Overview
+- **Framework**: Cross-platform with React Native/Flutter for UI; native modules for low-level access.
+- **State Management**: Finite State Machine (FSM) for modes; persistent storage via SharedPreferences/Keychain.
+- **Background Operations**: Android Foreground Services/iOS Background Modes for enforcement.
+
+### 4.2 Screen and Display Control
+- Dim to 0% brightness with black overlays.
+- Android: `WindowManager` flags for screen off; iOS: Guided Access integration.
+
+### 4.3 Sensor and Hardware Management
+- **Sensors**: Unregister listeners (e.g., `SensorManager` on Android, `CMMotionManager` on iOS) to halt data from accelerometer, gyroscope, etc.
+- **Location/Camera/Microphone**: Dynamic permission revocation; accessibility overlays for blocking.
+- **Haptics**: Suppress via API cancellations.
+
+### 4.4 Network and Isolation
+- Simulate Airplane Mode: Toggle WiFi/Bluetooth (Android APIs; iOS prompts).
+- App Blocking: Suspend backgrounds via `UsageStatsManager` (Android); DND APIs both platforms.
+
+### 4.5 Power Optimization
+- Enable low-power modes; minimal polling (5-10 seconds).
+- Battery Impact: Target <5% drain per hour.
+
+### 4.6 Security and Compliance
+- Encrypted data storage; opt-in cloud sync.
+- Avoid root/jailbreak; transparent permissions.
+
+## 5. Monetization and Business Model
+
+- **Freemium Structure**: Free core modes; premium ($4.99/month or $49.99/year) for unlimited profiles, analytics, custom audio, ad-free.
+- **Partnerships**: Integrate with wellness apps (e.g., Calm) for affiliate revenue.
+- **Additional Revenue**: In-app purchases for themes/sounds; enterprise version for corporate wellness programs.
+
+## 6. Challenges and Solutions
+
+- **User Frustration with Locks**: Solution: "Training Wheels" mode with easier overrides; educational tooltips.
+- **OS Restrictions**: Fallback to soft locks (e.g., notifications only) if permissions denied.
+- **Battery/Performance**: Optimize with efficient code; user education on benefits.
+- **Competition**: Differentiate via unique 20% rule and hardware integrations.
+- **Accessibility/Privacy**: Full compliance testing; anonymized data.
+
+## 7. Development Roadmap
+
+### 7.1 Phase 1: MVP (Q1 2026)
+- Core modes, timers, basic UI.
+- Android prototype; basic integrations.
+
+### 7.2 Phase 2: Beta (Q2 2026)
+- iOS port; advanced sensors/network controls.
+- User testing for 20% rule feedback.
+
+### 7.3 Phase 3: Launch (Q3 2026)
+- Premium features; app store submissions.
+- Marketing: Social campaigns emphasizing "Reclaim Your Time."
+
+### 7.4 Future Enhancements
+- AR wind-down experiences; VR integrations.
+- ML for predictive scheduling.
+- Global localization.
+
+## Appendices
+
+### A. Assumptions and Risks
+- Assumes user adoption of permissions; risk of low retention if too strict—mitigate with customization.
+- Dependency on OS updates; plan for annual compatibility reviews.
+
+### B. Metrics for Success
+- DAU/MAU ratios >30%.
+- Retention: 50% after 30 days.
+- App Store Ratings: 4.5+ stars.
+
+This document serves as a blueprint for LightsOut's development. Feedback and iterations welcome to refine the vision.
