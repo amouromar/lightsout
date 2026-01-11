@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
@@ -8,12 +8,17 @@ import { StatusBar } from 'expo-status-bar';
 import { TimerDisplay } from '@/components/TimerDisplay';
 import { ModeSelector, SessionMode } from '@/components/ModeSelector';
 import { PresetCard } from '@/components/PresetCard';
+
+import { Preset } from '@/constants/presets';
 import { BlackoutOverlay } from '@/components/BlackoutOverlay';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { format } from 'date-fns';
 import { useDeviceAPI } from '@/hooks/useDeviceAPI';
+import { usePresets } from '@/hooks/usePresets';
+import { PresetsBottomSheet } from '@/components/PresetsBottomSheet';
+import * as Haptics from 'expo-haptics';
 
 export default function Home() {
   const [mode, setMode] = useState<SessionMode>('Work');
@@ -25,6 +30,9 @@ export default function Home() {
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [locationName, setLocationName] = useState('Loading location...');
+  const [isPresetsVisible, setIsPresetsVisible] = useState(false);
+
+  const { allPresets, addPreset, deletePreset } = usePresets();
 
   const insets = useSafeAreaInsets();
   const {
@@ -79,14 +87,23 @@ export default function Home() {
     let interval: any;
     if (isActive && secondsRemaining > 0) {
       interval = setInterval(() => {
-        setSecondsRemaining((prev) => prev - 1);
-        updateLockscreenCountdown(secondsRemaining - 1);
+        setSecondsRemaining((prev) => {
+          const next = prev - 1;
+          updateLockscreenCountdown(next);
+          return next;
+        });
 
         // 20% rule check
-        const elapsed = totalSeconds - (secondsRemaining - 1);
-        if (elapsed >= totalSeconds * 0.2) {
-          setIsLocked(false);
-        }
+        setTotalSeconds((total) => {
+          setSecondsRemaining((prev) => {
+            const elapsed = total - prev;
+            if (elapsed >= total * 0.2) {
+              setIsLocked(false);
+            }
+            return prev;
+          });
+          return total;
+        });
       }, 1000);
     } else if (secondsRemaining === 0 && isActive) {
       setIsActive(false);
@@ -94,18 +111,12 @@ export default function Home() {
       clearNotification();
     }
     return () => clearInterval(interval);
-  }, [
-    isActive,
-    secondsRemaining,
-    totalSeconds,
-    updateLockscreenCountdown,
-    restoreBrightness,
-    clearNotification,
-  ]);
+  }, [isActive, secondsRemaining, updateLockscreenCountdown, restoreBrightness, clearNotification]);
 
-  const startSession = () => {
+  const startSession = useCallback(() => {
     const total = hours * 3600 + minutes * 60;
     if (total === 0) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setTotalSeconds(total);
     setSecondsRemaining(total);
     setIsActive(true);
@@ -115,15 +126,15 @@ export default function Home() {
     setAppBrightness(0.01);
     toggleWifi(false);
     updateLockscreenCountdown(total);
-  };
+  }, [hours, minutes, setAppBrightness, toggleWifi, updateLockscreenCountdown]);
 
-  const formatTime = (totalSeconds: number) => {
+  const formatTime = useCallback((totalSeconds: number) => {
     const m = Math.floor(totalSeconds / 60);
     const s = totalSeconds % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
-  const getUnlockWaitTime = () => {
+  const getUnlockWaitTime = useCallback(() => {
     const threshold = Math.ceil(totalSeconds * 0.2);
     const elapsed = totalSeconds - secondsRemaining;
     const remainingToUnlock = Math.max(0, threshold - elapsed);
@@ -131,12 +142,29 @@ export default function Home() {
       return `${Math.ceil(remainingToUnlock / 60)} min`;
     }
     return `${remainingToUnlock} sec`;
-  };
+  }, [totalSeconds, secondsRemaining]);
 
-  const setPreset = (h: number, m: number) => {
-    setHours(h);
-    setMinutes(m);
-  };
+  const setPreset = useCallback((preset: Preset) => {
+    Haptics.selectionAsync();
+    setHours(preset.hours);
+    setMinutes(preset.minutes);
+  }, []);
+
+  const onIncrementHour = useCallback(() => setHours((h) => Math.min(23, h + 1)), []);
+  const onDecrementHour = useCallback(() => setHours((h) => Math.max(0, h - 1)), []);
+  const onIncrementMinute = useCallback(() => setMinutes((m) => (m + 1) % 60), []);
+  const onDecrementMinute = useCallback(() => setMinutes((m) => (m - 1 + 60) % 60), []);
+  const onModeChange = useCallback((m: SessionMode) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setMode(m);
+  }, []);
+  const onPresetsClose = useCallback(() => setIsPresetsVisible(false), []);
+  const onPresetsOpen = useCallback(() => setIsPresetsVisible(true), []);
+  const onExitOverlay = useCallback(() => {
+    setIsActive(false);
+    restoreBrightness();
+    clearNotification();
+  }, [restoreBrightness, clearNotification]);
 
   return (
     <View className="flex-1 bg-background">
@@ -183,7 +211,7 @@ export default function Home() {
           <Text className="mb-4 font-outfit text-xs font-bold uppercase tracking-widest text-gray-500">
             MODE
           </Text>
-          <ModeSelector selectedMode={mode} onModeChange={setMode} />
+          <ModeSelector selectedMode={mode} onModeChange={onModeChange} />
         </View>
 
         {/* Duration Picker */}
@@ -194,43 +222,33 @@ export default function Home() {
           <TimerDisplay
             hours={hours}
             minutes={minutes}
-            onIncrementHour={() => setHours((h) => Math.min(23, h + 1))}
-            onDecrementHour={() => setHours((h) => Math.max(0, h - 1))}
-            onIncrementMinute={() => setMinutes((m) => (m + 1) % 60)}
-            onDecrementMinute={() => setMinutes((m) => (m - 1 + 60) % 60)}
+            onIncrementHour={onIncrementHour}
+            onDecrementHour={onDecrementHour}
+            onIncrementMinute={onIncrementMinute}
+            onDecrementMinute={onDecrementMinute}
           />
         </View>
 
         {/* Quick Presets */}
         <View className="mb-20">
-          <Text className="mb-4 font-outfit text-xs font-bold uppercase tracking-widest text-gray-500">
-            QUICK PRESETS
-          </Text>
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="font-outfit text-xs font-bold uppercase tracking-widest text-gray-500">
+              QUICK PRESETS
+            </Text>
+            <TouchableOpacity onPress={onPresetsOpen} hitSlop={50}>
+              <Text className="font-outfit text-xs font-bold text-gray-400">SEE ALL</Text>
+            </TouchableOpacity>
+          </View>
           <View className="flex-row flex-wrap justify-between">
-            <PresetCard
-              title="Power Nap"
-              duration="20 min"
-              icon="moon-waning-crescent"
-              onPress={() => setPreset(0, 20)}
-            />
-            <PresetCard
-              title="Deep Work"
-              duration="90 min"
-              icon="briefcase-outline"
-              onPress={() => setPreset(1, 30)}
-            />
-            <PresetCard
-              title="Study Sesh"
-              duration="50 min"
-              icon="book-open-variant"
-              onPress={() => setPreset(0, 50)}
-            />
-            <PresetCard
-              title="Focus Time"
-              duration="25 min"
-              icon="brain"
-              onPress={() => setPreset(0, 25)}
-            />
+            {allPresets.slice(0, 4).map((preset: Preset) => (
+              <PresetCard
+                key={preset.id}
+                title={preset.title}
+                duration={`${preset.hours > 0 ? preset.hours + 'h ' : ''}${preset.minutes}m`}
+                icon={preset.icon as any}
+                onPress={() => setPreset(preset)}
+              />
+            ))}
           </View>
         </View>
       </ScrollView>
@@ -262,11 +280,17 @@ export default function Home() {
         remainingTime={formatTime(secondsRemaining)}
         isLocked={isLocked}
         unlockWaitTime={getUnlockWaitTime()}
-        onExit={() => {
-          setIsActive(false);
-          restoreBrightness();
-          clearNotification();
-        }}
+        onExit={onExitOverlay}
+      />
+
+      {/* Presets Slide-up Menu */}
+      <PresetsBottomSheet
+        isVisible={isPresetsVisible}
+        onClose={onPresetsClose}
+        presets={allPresets}
+        onSelectPreset={setPreset}
+        onAddPreset={addPreset}
+        onDeletePreset={deletePreset}
       />
     </View>
   );

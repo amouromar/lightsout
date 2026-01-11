@@ -12,16 +12,16 @@ export const MODES_CONFIG: ModeConfig[] = [
   {
     label: 'Work',
     icon: 'briefcase-outline',
-    video: require('../assets/videos/Pin on papel.mp4'),
+    video: require('../assets/videos/work.mp4'),
   },
   {
     label: 'Study',
     icon: 'book-open-variant',
-    video: require('../assets/videos/Pinterest.mp4'),
+    video: require('../assets/videos/study.mp4'),
   },
   {
     label: 'Sleep',
     icon: 'moon-waning-crescent',
-    video: require('../assets/videos/Starssss.mp4'),
+    video: require('../assets/videos/sleep.mp4'),
   },
 ];

@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import * as Haptics from 'expo-haptics';
 
 /**
  * A hook that provides props for a component to handle both single taps and long presses.
@@ -24,10 +25,12 @@ export const useLongPress = (
 
     // Initial call
     actionRef.current();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     const runAction = () => {
       if (actionRef.current) {
         actionRef.current();
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         timerRef.current = setTimeout(runAction, interval);
       }
     };

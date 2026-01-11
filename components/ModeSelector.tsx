@@ -1,116 +1,168 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, LayoutChangeEvent, StyleSheet } from 'react-native';
+import React, { memo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Canvas, Box, BoxShadow, rect, rrect } from '@shopify/react-native-skia';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { SessionMode, MODES_CONFIG } from '../constants/modes';
+import { MODES_CONFIG, SessionMode, ModeConfig } from '@/constants/modes';
+
+export { SessionMode };
 
 interface ModeSelectorProps {
   selectedMode: SessionMode;
   onModeChange: (mode: SessionMode) => void;
 }
 
-interface ModeItemProps {
-  label: SessionMode;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  isSelected: boolean;
-  onPress: () => void;
-  onLayout: (event: LayoutChangeEvent) => void;
-  dims?: { width: number; height: number };
-  videoSource: any;
-}
+const ModeItem = memo(
+  ({
+    mode,
+    isSelected,
+    onPress,
+  }: {
+    mode: ModeConfig;
+    isSelected: boolean;
+    onPress: () => void;
+  }) => {
+    const player = useVideoPlayer(mode.video, (player) => {
+      player.loop = true;
+      player.muted = true;
+      player.play();
+    });
 
-const ModeItem: React.FC<ModeItemProps> = ({
-  label,
-  icon,
-  isSelected,
-  onPress,
-  onLayout,
-  dims,
-  videoSource,
-}) => {
-  const player = useVideoPlayer(videoSource, (player) => {
-    player.loop = true;
-    player.muted = true;
-    player.play();
-  });
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.container}>
+        <View
+          style={[
+            styles.inner,
+            { borderColor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.05)' },
+          ]}>
+          {/* Background Video - Using style instead of className to bypass Interop */}
+          <VideoView
+            player={player}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            nativeControls={false}
+          />
 
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      onLayout={onLayout}
-      activeOpacity={0.8}
-      className={`relative flex-1 items-center justify-center overflow-hidden rounded-3xl border py-4 ${
-        isSelected ? 'border-white/20' : 'border-white/5'
-      }`}>
-      {/* Video Background */}
-      <VideoView
-        player={player}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        nativeControls={false}
-      />
+          {/* Overlays */}
+          {isSelected ? (
+            <>
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.4)' }]} />
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.6)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <BlurView intensity={10} tint="dark" style={StyleSheet.absoluteFill} />
+              <View style={styles.topHighlight} />
+            </>
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.7)' }]} />
+          )}
 
-      {/* Dark Overlay */}
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: isSelected ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.6)' },
-        ]}
-      />
+          {/* Content */}
+          <View style={styles.content}>
+            <View
+              style={[styles.iconContainer, isSelected ? styles.iconActive : styles.iconInactive]}>
+              <MaterialCommunityIcons
+                name={mode.icon}
+                size={24}
+                color={isSelected ? '#ffffff' : '#9ca3af'}
+              />
+            </View>
+            <Text
+              style={[
+                styles.label,
+                { color: isSelected ? '#ffffff' : '#9ca3af' },
+                isSelected ? styles.labelActive : {},
+              ]}>
+              {mode.label.toUpperCase()}
+            </Text>
+          </View>
 
-      {isSelected && dims && (
-        <View style={StyleSheet.absoluteFill}>
-          <Canvas style={{ flex: 1 }}>
-            <Box box={rrect(rect(0, 0, dims.width, dims.height), 24, 24)} color="transparent">
-              <BoxShadow dx={0} dy={4} blur={10} color="rgba(0,0,0,0.8)" inner />
-              <BoxShadow dx={0} dy={-1} blur={4} color="rgba(255,255,255,0.1)" inner />
-            </Box>
-          </Canvas>
+          {/* Selection Indicator Dot */}
+          {isSelected && <View style={styles.dot} />}
         </View>
-      )}
+      </TouchableOpacity>
+    );
+  }
+);
 
-      <MaterialCommunityIcons
-        name={icon}
-        size={32}
-        color={isSelected ? 'white' : '#9ca3af'}
-        style={{ zIndex: 1 }}
-      />
-      <Text
-        className={`mt-2 font-outfit text-base ${
-          isSelected ? 'font-bold text-white' : 'text-gray-400'
-        }`}
-        style={{ zIndex: 1 }}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
-
-export const ModeSelector: React.FC<ModeSelectorProps> = ({ selectedMode, onModeChange }) => {
-  const [dims, setDims] = useState<Record<string, { width: number; height: number }>>({});
-
-  const onLayout = (label: string) => (event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    setDims((prev) => ({ ...prev, [label]: { width, height } }));
-  };
-
+export const ModeSelector = memo(({ selectedMode, onModeChange }: ModeSelectorProps) => {
   return (
-    <View className="flex-row justify-between gap-4 px-4 py-4">
+    <View style={styles.row}>
       {MODES_CONFIG.map((mode) => (
         <ModeItem
           key={mode.label}
-          label={mode.label}
-          icon={mode.icon}
+          mode={mode}
           isSelected={selectedMode === mode.label}
           onPress={() => onModeChange(mode.label)}
-          onLayout={onLayout(mode.label)}
-          dims={dims[mode.label]}
-          videoSource={mode.video}
         />
       ))}
     </View>
   );
-};
-export { SessionMode };
+});
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  inner: {
+    position: 'relative',
+    height: 112, // h-28
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: 24, // rounded-3xl
+    borderWidth: 1,
+  },
+  topHighlight: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  content: {
+    zIndex: 10,
+    alignItems: 'center',
+  },
+  iconContainer: {
+    marginBottom: 8,
+    height: 40,
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12, // rounded-2xl
+  },
+  iconActive: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  iconInactive: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  label: {
+    fontFamily: 'Outfit_700Bold',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
+  labelActive: {
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  dot: {
+    position: 'absolute',
+    bottom: 8,
+    height: 4,
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: '#818cf8', // indigo-400
+  },
+});

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -9,11 +9,11 @@ interface PresetCardProps {
   onPress: () => void;
 }
 
-export const PresetCard: React.FC<PresetCardProps> = ({ title, duration, icon, onPress }) => {
+export const PresetCard = memo(({ title, duration, icon, onPress }: PresetCardProps) => {
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="mb-4 w-[48%] flex-row justify-between items-center gap-4 rounded-full border border-white/5 bg-surface p-4 shadow-md">
+      className="mb-4 w-[48%] flex-row items-center justify-between gap-4 rounded-full border border-white/5 bg-surface p-4 shadow-md">
       <View className="mb-1 mt-1">
         <MaterialCommunityIcons name={icon} size={24} color="#9ca3af" />
       </View>
@@ -21,4 +21,4 @@ export const PresetCard: React.FC<PresetCardProps> = ({ title, duration, icon, o
       <Text className="font-outfit text-xs text-gray-400">{duration}</Text>
     </TouchableOpacity>
   );
-};
+});

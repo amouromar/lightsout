@@ -24,10 +24,13 @@ if (!isExpoGo || Platform.OS === 'ios') {
   });
 }
 
+// Shared state across all useDeviceAPI instances
+let sharedOriginalBrightness: number | null = null;
+
 export const useDeviceAPI = () => {
   const [hasBrightnessPermission, setHasBrightnessPermission] = useState(false);
   const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
-  const [originalBrightness, setOriginalBrightness] = useState<number | null>(null);
+  const [, setForceUpdate] = useState(0); // Used to trigger re-render when shared state changes
 
   useEffect(() => {
     (async () => {
@@ -48,25 +51,26 @@ export const useDeviceAPI = () => {
       if (!hasBrightnessPermission) return;
       try {
         const current = await Brightness.getBrightnessAsync();
-        if (originalBrightness === null) {
-          setOriginalBrightness(current);
+        if (sharedOriginalBrightness === null) {
+          sharedOriginalBrightness = current;
+          setForceUpdate((v) => v + 1);
         }
         await Brightness.setBrightnessAsync(level);
       } catch (e) {
         console.error('Error setting brightness:', e);
       }
     },
-    [hasBrightnessPermission, originalBrightness]
+    [hasBrightnessPermission]
   );
 
   const restoreBrightness = useCallback(async () => {
-    if (!hasBrightnessPermission || originalBrightness === null) return;
+    if (!hasBrightnessPermission || sharedOriginalBrightness === null) return;
     try {
-      await Brightness.setBrightnessAsync(originalBrightness);
+      await Brightness.setBrightnessAsync(sharedOriginalBrightness);
     } catch (e) {
       console.error('Error restoring brightness:', e);
     }
-  }, [hasBrightnessPermission, originalBrightness]);
+  }, [hasBrightnessPermission]);
 
   const toggleWifi = useCallback(async (enabled: boolean) => {
     if (!isAndroid || isExpoGo || !WifiManager) return;
