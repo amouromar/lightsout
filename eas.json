@@ -15,7 +15,16 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "android": {
+        "gradleCommand": ":app:assembleRelease",
+        "buildType": "apk",
+        "image": "latest",
+        "node": "20"
+      },
+      "env": {
+        "EXPO_ANDROID_GRADLE_PLUGIN_VERSION": "8.5.2",
+        "EXPO_ANDROID_GRADLE_VERSION": "8.9"
+      }
     }
   },
   "submit": {
