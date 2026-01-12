@@ -36,13 +36,21 @@ export const TimerDisplay = memo(
         <View className="flex-row items-center justify-center space-x-6">
           {/* Hours Column */}
           <View className="items-center">
-            <TouchableOpacity {...hourIncPress} className="p-2" testID="hour-increment" hitSlop={20}>
+            <TouchableOpacity
+              {...hourIncPress}
+              className="p-2"
+              testID="hour-increment"
+              hitSlop={20}>
               <MaterialCommunityIcons name="chevron-up" size={32} color="#4b5563" />
             </TouchableOpacity>
             <View className="h-40 w-32 items-center justify-center rounded-3xl border border-white/10 bg-surface shadow-lg">
               <Text className="font-outfit text-7xl text-white">{formatNumber(hours)}</Text>
             </View>
-            <TouchableOpacity {...hourDecPress} className="p-2" testID="hour-decrement" hitSlop={20}>
+            <TouchableOpacity
+              {...hourDecPress}
+              className="p-2"
+              testID="hour-decrement"
+              hitSlop={20}>
               <MaterialCommunityIcons name="chevron-down" size={32} color="#4b5563" />
             </TouchableOpacity>
             <Text className="mt-2 font-outfit text-xs font-bold tracking-widest text-gray-500">
@@ -57,13 +65,21 @@ export const TimerDisplay = memo(
 
           {/* Minutes Column */}
           <View className="items-center">
-            <TouchableOpacity {...minIncPress} className="p-2" testID="minute-increment" hitSlop={20}>
+            <TouchableOpacity
+              {...minIncPress}
+              className="p-2"
+              testID="minute-increment"
+              hitSlop={20}>
               <MaterialCommunityIcons name="chevron-up" size={32} color="#4b5563" />
             </TouchableOpacity>
             <View className="h-40 w-32 items-center justify-center rounded-3xl border border-white/10 bg-surface shadow-lg">
               <Text className="font-outfit text-7xl text-white">{formatNumber(minutes)}</Text>
             </View>
-            <TouchableOpacity {...minDecPress} className="p-2" testID="minute-decrement" hitSlop={20}>
+            <TouchableOpacity
+              {...minDecPress}
+              className="p-2"
+              testID="minute-decrement"
+              hitSlop={20}>
               <MaterialCommunityIcons name="chevron-down" size={32} color="#4b5563" />
             </TouchableOpacity>
             <Text className="mt-2 font-outfit text-xs font-bold tracking-widest text-gray-500">

@@ -125,7 +125,8 @@ export function PresetsBottomSheet({
               </Text>
               <TouchableOpacity
                 onPress={() => setIsAdding(!isAdding)}
-                className="h-10 w-10 items-center justify-center rounded-full bg-white/10" hitSlop={50}>
+                className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
+                hitSlop={50}>
                 <MaterialCommunityIcons
                   name={isAdding ? 'close' : 'plus'}
                   size={24}
@@ -212,7 +213,8 @@ export function PresetsBottomSheet({
                     {preset.isCustom && (
                       <TouchableOpacity
                         onPress={() => onDeletePreset(preset.id)}
-                        className="ml-2 h-10 w-10 items-center justify-center" hitSlop={50}>
+                        className="ml-2 h-10 w-10 items-center justify-center"
+                        hitSlop={50}>
                         <MaterialCommunityIcons
                           name="trash-can-outline"
                           size={24}
