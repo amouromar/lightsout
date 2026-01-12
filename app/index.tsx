@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 import { useDeviceAPI } from '@/hooks/useDeviceAPI';
 import { usePresets } from '@/hooks/usePresets';
 import { PresetsBottomSheet } from '@/components/PresetsBottomSheet';
+import { LocationInfoBottomSheet } from '@/components/LocationInfoBottomSheet';
+import { MainMenuBottomSheet } from '@/components/MainMenuBottomSheet';
 import * as Haptics from 'expo-haptics';
 
 export default function Home() {
@@ -31,17 +33,14 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [locationName, setLocationName] = useState('Loading location...');
   const [isPresetsVisible, setIsPresetsVisible] = useState(false);
+  const [isLocationInfoVisible, setIsLocationInfoVisible] = useState(false);
+  const [isMainMenuVisible, setIsMainMenuVisible] = useState(false);
 
   const { allPresets, addPreset, deletePreset } = usePresets();
 
   const insets = useSafeAreaInsets();
-  const {
-    setAppBrightness,
-    restoreBrightness,
-    toggleWifi,
-    updateLockscreenCountdown,
-    clearNotification,
-  } = useDeviceAPI();
+  const { setAppBrightness, restoreBrightness, updateLockscreenCountdown, clearNotification } =
+    useDeviceAPI();
 
   // Timer logic
   useEffect(() => {
@@ -124,9 +123,8 @@ export default function Home() {
 
     // Device API Controls
     setAppBrightness(0.01);
-    toggleWifi(false);
     updateLockscreenCountdown(total);
-  }, [hours, minutes, setAppBrightness, toggleWifi, updateLockscreenCountdown]);
+  }, [hours, minutes, setAppBrightness, updateLockscreenCountdown]);
 
   const formatTime = useCallback((totalSeconds: number) => {
     const m = Math.floor(totalSeconds / 60);
@@ -201,9 +199,26 @@ export default function Home() {
               {format(currentTime, 'hh:mm a')}
             </Text>
             <Text className="text-gray-600">·</Text>
-            <MaterialCommunityIcons name="map-marker" size={14} color="#6366f1" />
-            <Text className="font-outfit text-sm text-gray-400">{locationName}</Text>
+            <TouchableOpacity
+              onPress={() => setIsLocationInfoVisible(true)}
+              className="flex-row items-center space-x-2"
+              hitSlop={20}>
+              <MaterialCommunityIcons
+                name="map-marker"
+                size={14}
+                color="#6366f1"
+                style={{ marginRight: 4 }}
+              />
+              <Text className="font-outfit text-sm text-gray-400">{locationName}</Text>
+            </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            onPress={() => setIsMainMenuVisible(true)}
+            activeOpacity={0.7}
+            className="absolute right-0 top-0 h-10 w-10 items-center justify-center rounded-full bg-white/5"
+            hitSlop={20}>
+            <MaterialCommunityIcons name="menu" size={24} color="#9ca3af" />
+          </TouchableOpacity>
         </View>
 
         {/* Mode Selection */}
@@ -280,7 +295,20 @@ export default function Home() {
         remainingTime={formatTime(secondsRemaining)}
         isLocked={isLocked}
         unlockWaitTime={getUnlockWaitTime()}
+        locationName={locationName}
         onExit={onExitOverlay}
+      />
+
+      {/* Main Menu Slide-up */}
+      <MainMenuBottomSheet
+        isVisible={isMainMenuVisible}
+        onClose={() => setIsMainMenuVisible(false)}
+      />
+
+      {/* Location Privacy Info */}
+      <LocationInfoBottomSheet
+        isVisible={isLocationInfoVisible}
+        onClose={() => setIsLocationInfoVisible(false)}
       />
 
       {/* Presets Slide-up Menu */}

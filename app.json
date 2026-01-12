@@ -18,7 +18,8 @@
       "expo-font",
       "expo-localization",
       "react-native-wifi-reborn",
-      "expo-video"
+      "expo-video",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -36,7 +37,12 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "LightsOut uses your location to provide accurate local time and weather context during your focus sessions.",
+        "NSBrightnessUsageDescription": "LightsOut needs access to your screen brightness to dim the display during your focus sessions.",
+        "NSLocalNotificationsUsageDescription": "LightsOut uses notifications to keep you updated on your remaining focus time on the lock screen."
+      }
     },
     "android": {
       "adaptiveIcon": {

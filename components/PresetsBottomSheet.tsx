@@ -114,7 +114,7 @@ export function PresetsBottomSheet({
 
       <GestureDetector gesture={gesture}>
         <Animated.View
-          className="absolute z-[100] w-full rounded-tl-3xl rounded-tr-3xl border-l-2 border-r-2 border-t-2 border-white/10 bg-[#0a0a0a]"
+          className="absolute z-[100] w-full rounded-tl-[32px] rounded-tr-[32px] border-l border-r border-t border-white/10 bg-[#111]"
           style={[{ height: SCREEN_HEIGHT, top: SCREEN_HEIGHT }, rBottomSheetStyle]}>
           <View className="my-[15px] h-1 w-10 self-center rounded-sm bg-white/20" />
 

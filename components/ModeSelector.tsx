@@ -23,11 +23,40 @@ const ModeItem = memo(
     isSelected: boolean;
     onPress: () => void;
   }) => {
+    const [status, setStatus] = React.useState<string>('idle');
+    const [error, setError] = React.useState<string | null>(null);
+
     const player = useVideoPlayer(mode.video, (player) => {
       player.loop = true;
       player.muted = true;
-      player.play();
+      // Don't auto-play on creation to save bandwidth for unselected items
     });
+
+    React.useEffect(() => {
+      // Play if selected, pause otherwise
+      if (isSelected) {
+        player.play();
+      } else {
+        player.pause();
+      }
+    }, [isSelected, player]);
+
+    React.useEffect(() => {
+      const statusSub = player.addListener('statusChange', (payload) => {
+        setStatus(payload.status);
+      });
+
+      const errorSub = player.addListener('playToEnd', () => {
+        // Not really an error, but helps debug life cycle
+      });
+
+      return () => {
+        statusSub.remove();
+        errorSub.remove();
+      };
+    }, [player]);
+
+    const isVideoReady = status === 'readyToPlay';
 
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.container}>
@@ -36,13 +65,24 @@ const ModeItem = memo(
             styles.inner,
             { borderColor: isSelected ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.05)' },
           ]}>
-          {/* Background Video - Using style instead of className to bypass Interop */}
+          {/* Background Video */}
           <VideoView
             player={player}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             nativeControls={false}
           />
+
+          {/* Loading Placeholder */}
+          {!isVideoReady && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: '#111', justifyContent: 'center', alignItems: 'center' },
+              ]}>
+              <MaterialCommunityIcons name={mode.icon} size={32} color="rgba(255,255,255,0.1)" />
+            </View>
+          )}
 
           {/* Overlays */}
           {isSelected ? (

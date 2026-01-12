@@ -9,7 +9,6 @@ const isAndroid = Platform.OS === 'android';
 
 // Conditionally require native modules
 const Notifications = !isExpoGo || !isAndroid ? require('expo-notifications') : null;
-const WifiManager = !isExpoGo ? require('react-native-wifi-reborn').default : null;
 
 // Configure notifications only if not in Expo Go or if it's iOS
 if (!isExpoGo || Platform.OS === 'ios') {
@@ -72,19 +71,6 @@ export const useDeviceAPI = () => {
     }
   }, [hasBrightnessPermission]);
 
-  const toggleWifi = useCallback(async (enabled: boolean) => {
-    if (!isAndroid || isExpoGo || !WifiManager) return;
-    try {
-      if (enabled) {
-        // Enabling wifi is tricky on new android versions
-      } else {
-        await WifiManager.setEnabled(false);
-      }
-    } catch (e) {
-      console.error('Error toggling WiFi:', e);
-    }
-  }, []);
-
   const updateLockscreenCountdown = useCallback(
     async (remainingSeconds: number) => {
       if (!hasNotificationPermission || !Notifications) return;
@@ -128,7 +114,6 @@ export const useDeviceAPI = () => {
   return {
     setAppBrightness,
     restoreBrightness,
-    toggleWifi,
     updateLockscreenCountdown,
     clearNotification,
     hasPermissions: hasBrightnessPermission && hasNotificationPermission,

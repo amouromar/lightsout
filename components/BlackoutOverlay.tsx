@@ -17,7 +17,47 @@ interface BlackoutOverlayProps {
   onExit?: () => void;
   isLocked?: boolean;
   unlockWaitTime?: string;
+  locationName?: string;
 }
+
+// Sub-component to lazy-load video player only when overlay is visible
+const VideoBackground = ({ video, isVisible }: { video: any; isVisible: boolean }) => {
+  const [status, setStatus] = React.useState<string>('idle');
+  const player = useVideoPlayer(video, (player) => {
+    player.loop = true;
+    player.muted = true;
+    player.play();
+  });
+
+  useEffect(() => {
+    const subscription = player.addListener('statusChange', (payload) => {
+      setStatus(payload.status);
+    });
+    return () => subscription.remove();
+  }, [player]);
+
+  useEffect(() => {
+    if (isVisible) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isVisible, player]);
+
+  const isVideoReady = status === 'readyToPlay';
+
+  return (
+    <>
+      <VideoView
+        player={player}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        nativeControls={false}
+      />
+      {!isVideoReady && <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }]} />}
+    </>
+  );
+};
 
 export const BlackoutOverlay: React.FC<BlackoutOverlayProps> = ({
   isVisible,
@@ -26,17 +66,12 @@ export const BlackoutOverlay: React.FC<BlackoutOverlayProps> = ({
   onExit,
   isLocked = true,
   unlockWaitTime,
+  locationName,
 }) => {
   const { setAppBrightness, restoreBrightness } = useDeviceAPI();
   const wakeTimerRef = useRef<any>(null);
 
   const modeConfig = useMemo(() => MODES_CONFIG.find((m) => m.label === mode), [mode]);
-
-  const player = useVideoPlayer(modeConfig?.video, (player) => {
-    player.loop = true;
-    player.muted = true;
-    player.play();
-  });
 
   const handleTouch = () => {
     if (!isVisible) return;
@@ -74,13 +109,8 @@ export const BlackoutOverlay: React.FC<BlackoutOverlayProps> = ({
       className="z-50 bg-black">
       <StatusBar hidden={isVisible} animated />
       <Pressable onPress={handleTouch} style={StyleSheet.absoluteFill}>
-        {/* Background Video */}
-        <VideoView
-          player={player}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          nativeControls={false}
-        />
+        {/* Background Video - Lazy loaded */}
+        <VideoBackground video={modeConfig?.video} isVisible={isVisible} />
 
         {/* Dark Overlay for readability */}
         <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]} />
@@ -108,6 +138,20 @@ export const BlackoutOverlay: React.FC<BlackoutOverlayProps> = ({
           </View>
         </View>
 
+        {/* Location/Weather Context */}
+        <Animated.View entering={FadeIn.delay(300)} className="absolute right-6 top-32 items-end">
+          <View className="flex-row items-center gap-2">
+            <Text className="font-outfit text-sm text-gray-400">
+              {locationName || 'Local Area'}
+            </Text>
+            <MaterialCommunityIcons name="map-marker" size={12} color="#6366f1" />
+          </View>
+          <View className="mt-1 flex-row items-center gap-2">
+            <Text className="font-outfit text-xs font-medium text-gray-500">Clear Skies</Text>
+            <MaterialCommunityIcons name="weather-sunny" size={12} color="#facc15" />
+          </View>
+        </Animated.View>
+
         {/* Main Content */}
         <View className="-mt-20 flex-1 items-center justify-center">
           {/* Circular Timer Ring */}
@@ -124,7 +168,7 @@ export const BlackoutOverlay: React.FC<BlackoutOverlayProps> = ({
 
           {/* Override Card */}
           {isLocked && (
-            <View className="mt-20 w-3/4 flex-row items-center gap-4 space-x-4 rounded-3xl border border-white/5 bg-surface/80 p-4">
+            <View className="mt-20 w-fit flex-row items-center gap-4 space-x-4 rounded-3xl border border-white/5 bg-surface/80 p-4">
               <View className="rounded-2xl bg-white/5 p-3">
                 <MaterialCommunityIcons name="shield-alert-outline" size={24} color="#9ca3af" />
               </View>
