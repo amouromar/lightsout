@@ -4,10 +4,7 @@
     "slug": "lightsout",
     "version": "1.0.0",
     "scheme": "lightsout",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -19,7 +16,21 @@
       "expo-localization",
       "react-native-wifi-reborn",
       "expo-video",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splash-light.png", // light mode version
+          "resizeMode": "contain",
+          "imageWidth": 180, // optional - adjust size
+          "dark": {
+            "backgroundColor": "#000000", // or "#121212", etc.
+            "image": "./assets/splash-dark.png", // dark mode version
+            "resizeMode": "contain"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -33,9 +44,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -50,9 +59,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.amourhamisiomar.lightsout",
-      "permissions": [
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      "permissions": ["android.permission.ACCESS_FINE_LOCATION"]
     },
     "extra": {
       "router": {},
