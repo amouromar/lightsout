@@ -4,7 +4,10 @@
     "slug": "lightsout",
     "version": "1.0.0",
     "scheme": "lightsout",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -30,7 +33,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -44,7 +49,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.amourhamisiomar.lightsout"
+      "package": "com.amourhamisiomar.lightsout",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "60a59f0a-810d-494b-8119-fa4426756a02"
+      }
     }
   }
 }
